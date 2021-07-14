@@ -6,21 +6,40 @@ import (
 	"os"
 
 	"go.uber.org/zap"
+
+	"github.com/rhysemmas/fuck-bots/pkg/playlist"
 )
 
 var (
-	defaultKey string = os.Getenv("API_KEY")
-	defaultRpm int    = 60
-	key        string
-	rpm        int
+	defaultAddr         = "0.0.0.0"
+	defaultPort         = 8080
+	defaultPlaylistID   = ""
+	defaultPlaylistName = ""
+	defaultClientID     = ""
+	defaultClientSecret = ""
+	defaultRedirectURI  = ""
+	defaultDebug        = false
+
+	addr         string
+	port         int
+	playlistID   string
+	playlistName string
+	clientID     string
+	clientSecret string
+	redirectURI  string
+	debug        bool
 )
 
 func main() {
-	// get current playlist details from spotify
-	// write to work channel if there is work to do
-	// read from work channel, update playlist name if there is work to do
-	flag.StringVar(&key, "key", defaultKey, "Spotify API key, defaults to value of API_KEY env var")
-	flag.IntVar(&rpm, "key", defaultRpm, "Rate of requests to Spotify API per minute, defaults to 60")
+	flag.StringVar(&addr, "address", defaultAddr, "Address to run http server, defaults to 0.0.0.0")
+	flag.IntVar(&port, "port", defaultPort, "Port to run http server, defaults to 8080")
+	flag.StringVar(&playlistID, "playlist-id", defaultPlaylistID, "ID of playlist to protect")
+	flag.StringVar(&playlistName, "playlist-name", defaultPlaylistName, "Expected name of the playlist being protected")
+	flag.StringVar(&clientID, "client-id", defaultClientID, "Spotify app client ID, defaults to value of CLIENT_ID env var")
+	flag.StringVar(&clientSecret, "client-secret", defaultClientSecret, "Spotify app client secret, defaults to value of CLIENT_SECRET env var")
+	flag.StringVar(&redirectURI, "redirect-uri", defaultRedirectURI, "Redirect URI for completing Spotify OAuth")
+	flag.BoolVar(&debug, "debug", defaultDebug, "Debug mode, defaults to false")
+
 	flag.Parse()
 
 	if err := exec(); err != nil {
@@ -36,11 +55,24 @@ func exec() error {
 	}
 	defer logger.Sync()
 
+	addr = fmt.Sprintf("%s:%d", addr, port)
+
+	if err = playlist.NewProtector(logger, addr, playlistID, playlistName, clientID, clientSecret, redirectURI); err != nil {
+		return fmt.Errorf("error protecting playlist: %v", err)
+	}
+
 	return nil
 }
 
 func initialiseLogger() (*zap.SugaredLogger, error) {
-	l, err := zap.NewDevelopment()
+	var l *zap.Logger
+	var err error
+
+	if debug {
+		l, err = zap.NewDevelopment()
+	} else {
+		l, err = zap.NewProduction()
+	}
 	if err != nil {
 		return nil, err
 	}
