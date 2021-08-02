@@ -53,8 +53,8 @@ func NewProtector(logger *zap.SugaredLogger, addr, clientID, clientSecret, playl
 		logger:       logger,
 	}
 
-	go p.ProtectPlaylist()
-	go p.StartCallbackServer(addr)
+	go p.protectPlaylist()
+	go p.startCallbackServer(addr)
 
 	select {
 	case signal := <-stopCh:
@@ -70,7 +70,7 @@ func NewProtector(logger *zap.SugaredLogger, addr, clientID, clientSecret, playl
 	return fmt.Errorf("all go routines have exited")
 }
 
-func (p *protector) StartCallbackServer(addr string) {
+func (p *protector) startCallbackServer(addr string) {
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
 
@@ -85,7 +85,7 @@ func (p *protector) StartCallbackServer(addr string) {
 	}
 }
 
-func (p *protector) ProtectPlaylist() {
+func (p *protector) protectPlaylist() {
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
 
