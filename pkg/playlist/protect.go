@@ -119,6 +119,7 @@ func (p *protector) protectPlaylist() {
 				continue
 			}
 
+			// TODO: use ticker instead of sleep
 			time.Sleep(5 * time.Second)
 			p.logger.Debugw("making playlist request")
 
