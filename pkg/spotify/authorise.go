@@ -9,7 +9,19 @@ import (
 	"go.uber.org/zap"
 )
 
-// func authorise() - use this to make request for auth? need to print out the URL for the user to auth with and trigger callback
+// Authorise starts OAuth with Spotify by getting the user to authorise and grant a token with appropriate scopes
+func Authorise(logger *zap.SugaredLogger, clientID, redirectURI string) error {
+	logger.Debugw("making authorise request")
+	client := NewClient("https://accounts.spotify.com/authorize")
+
+	url, err := client.Authorise(clientID, redirectURI)
+	if err != nil {
+		return fmt.Errorf("error making authorise request: %v", err)
+	}
+
+	logger.Infow("please visit the following URL to complete authorisation", "url", url)
+	return nil
+}
 
 // GetToken gets a token using supplied auth code and client data
 func GetToken(ctx context.Context, logger *zap.SugaredLogger, authCode, clientID, clientSecret, redirectURI string, tokenCh chan string, errorCh chan error, wg *sync.WaitGroup) error {
@@ -34,6 +46,7 @@ func GetToken(ctx context.Context, logger *zap.SugaredLogger, authCode, clientID
 
 // refreshToken refreshes an access token
 func refreshToken(ctx context.Context, logger *zap.SugaredLogger, client *Client, clientID, clientSecret, redirectURI string, tokenCh chan string, errorCh chan error, wg *sync.WaitGroup, r Refresh) {
+	// TODO: use errorCh to write an error if we can't recover from refreshing token
 	logger.Debugw("refresh routine started")
 
 	wg.Add(1)

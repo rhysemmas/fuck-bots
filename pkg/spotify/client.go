@@ -34,6 +34,57 @@ func NewClient(endpoint string) *Client {
 	}
 }
 
+func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
+	var location string
+
+	err := RetryAPICall(func() (waitTime int, err error) {
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		params := "client_id=" + url.QueryEscape(clientID) +
+			"&response_type=code" +
+			"&redirect_uri=" + url.QueryEscape(redirectURI) +
+			"&scope=user-read-private&user-read-email&playlist-modify-private&playlist-modify-public" +
+			"&state=aslfsajhfbajhfbajhbAFHWIruf43872875uwfhhkjdsfbsahkjf"
+
+		path := fmt.Sprintf(c.Endpoint+"?%s", params)
+
+		req, err := http.NewRequest("GET", path, nil)
+		if err != nil {
+			return 0, fmt.Errorf("error creating http request: %v", err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return 0, fmt.Errorf("error making authorisation request: %v", err)
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 429 {
+			waitTime, err := strconv.Atoi(resp.Header["Retry-After"][0])
+			if err != nil {
+				return 0, fmt.Errorf("error converting retry after to int: %v", err)
+			}
+			return waitTime, &RateLimitError{E: "hit rate limit"}
+		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
+		}
+
+		location = resp.Header.Get("location")
+		if location == "" {
+			return 0, fmt.Errorf("got empty location header")
+		}
+
+		return 0, nil
+	})
+
+	return location, err
+}
+
 // GetToken gets a token from the spotify API
 func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) (Token, error) {
 	var t Token
@@ -56,7 +107,7 @@ func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) 
 		if resp.StatusCode == 429 {
 			waitTime, err := strconv.Atoi(resp.Header["Retry-After"][0])
 			if err != nil {
-				return 0, fmt.Errorf("erorr converting retry after to int: %v", err)
+				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {

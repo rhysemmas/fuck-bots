@@ -31,6 +31,8 @@ type protector struct {
 // NewProtector protects playlists
 func NewProtector(logger *zap.SugaredLogger, addr, clientID, clientSecret, playlistID, playlistName, redirectURI string) error {
 	var wg sync.WaitGroup
+	var err error
+
 	tokenCh := make(chan string, 1)
 	errorCh := make(chan error, 1)
 	stopCh := make(chan os.Signal, 1)
@@ -56,18 +58,27 @@ func NewProtector(logger *zap.SugaredLogger, addr, clientID, clientSecret, playl
 	go p.protectPlaylist()
 	go p.startCallbackServer(addr)
 
+	if err = spotify.Authorise(logger, clientID, redirectURI); err != nil {
+		return fmt.Errorf("error making authorise request: %v", err)
+	}
+
 	select {
 	case signal := <-stopCh:
 		logger.Infow("shutdown signal received", "signal", signal)
 		cancel()
-	case err := <-errorCh:
+	case err = <-errorCh:
 		logger.Warnw("fatal error, stopping", "err", err)
 		cancel()
 	}
 
 	wg.Wait()
+	logger.Debugw("all go routines have exited")
 
-	return fmt.Errorf("all go routines have exited")
+	if err != nil {
+		return fmt.Errorf("error from channel: %v", err)
+	}
+
+	return nil
 }
 
 func (p *protector) startCallbackServer(addr string) {
@@ -88,6 +99,7 @@ func (p *protector) startCallbackServer(addr string) {
 }
 
 func (p *protector) protectPlaylist() {
+	// TODO: use errorCh to write an error if we can't protect playlist
 	p.logger.Debugw("protector routine started")
 
 	p.waitGroup.Add(1)
@@ -107,11 +119,13 @@ func (p *protector) protectPlaylist() {
 				continue
 			}
 
+			time.Sleep(5 * time.Second)
 			p.logger.Debugw("making playlist request")
 
 			playlist, err := client.GetPlaylistDetails(token)
 			if err != nil {
 				p.logger.Warnw("error getting playlist details", "error", err)
+				continue
 			}
 
 			p.logger.Infow("got playlist", "playlist", playlist)
@@ -124,10 +138,9 @@ func (p *protector) protectPlaylist() {
 				err := client.UpdatePlaylistDetails(token, updatedPlaylist)
 				if err != nil {
 					p.logger.Warnw("error updating playlist", "error", err)
+					continue
 				}
 			}
-
-			time.Sleep(5 * time.Second)
 		}
 	}
 }
