@@ -94,13 +94,12 @@ func (p *protector) protectPlaylist() {
 
 	for {
 		select {
-		case token := <-p.tokenCh:
+		case token = <-p.tokenCh:
 			p.logger.Debugw("got new token", "token", token)
 		case <-p.ctx.Done():
 			return
 		default:
 			if len(token) == 0 {
-				p.logger.Debugw("no token to use")
 				continue
 			}
 

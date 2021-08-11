@@ -48,7 +48,7 @@ func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) 
 				"redirect_uri":  {redirectURI},
 			})
 		if err != nil {
-			return 0, fmt.Errorf("error making refresh request: %v", err)
+			return 0, fmt.Errorf("error making token request: %v", err)
 		}
 
 		defer resp.Body.Close()

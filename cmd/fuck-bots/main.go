@@ -57,7 +57,7 @@ func exec() error {
 
 	addr = fmt.Sprintf("%s:%d", addr, port)
 
-	if err = playlist.NewProtector(logger, addr, playlistID, playlistName, clientID, clientSecret, redirectURI); err != nil {
+	if err = playlist.NewProtector(logger, addr, clientID, clientSecret, playlistID, playlistName, redirectURI); err != nil {
 		return fmt.Errorf("error protecting playlist: %v", err)
 	}
 
