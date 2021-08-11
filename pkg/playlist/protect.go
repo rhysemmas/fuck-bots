@@ -71,6 +71,8 @@ func NewProtector(logger *zap.SugaredLogger, addr, clientID, clientSecret, playl
 }
 
 func (p *protector) startCallbackServer(addr string) {
+	p.logger.Debugw("callback server routine started")
+
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
 
@@ -86,6 +88,8 @@ func (p *protector) startCallbackServer(addr string) {
 }
 
 func (p *protector) protectPlaylist() {
+	p.logger.Debugw("protector routine started")
+
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
 

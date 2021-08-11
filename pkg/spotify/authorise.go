@@ -32,40 +32,47 @@ func GetToken(ctx context.Context, logger *zap.SugaredLogger, authCode, clientID
 	return nil
 }
 
-// RefreshToken refreshes an access token
-func refreshToken(ctx context.Context, logger *zap.SugaredLogger, client *Client, clientID, clientSecret, redirectURI string, tokenCh chan string, errorCh chan error, wg *sync.WaitGroup, refresh Refresh) {
+// refreshToken refreshes an access token
+func refreshToken(ctx context.Context, logger *zap.SugaredLogger, client *Client, clientID, clientSecret, redirectURI string, tokenCh chan string, errorCh chan error, wg *sync.WaitGroup, r Refresh) {
+	logger.Debugw("refresh routine started")
+
 	wg.Add(1)
 	defer wg.Done()
 
+	retryCh := make(chan int, 1)
 	var offset = 60
+
+	ticker := time.NewTicker(time.Duration(r.ExpiresIn-offset) * time.Second)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			logger.Debugw("ticker refreshing token")
+			refresh(logger, client, &r, clientID, clientSecret, redirectURI, tokenCh, retryCh)
+		case <-retryCh:
+			logger.Debugw("retry channel refreshing token")
+			refresh(logger, client, &r, clientID, clientSecret, redirectURI, tokenCh, retryCh)
 		default:
-			// time.Sleep(time.Second * (time.Duration(refresh.ExpiresIn) - offset))
-			time.Sleep(time.Second * 10)
-
-			logger.Debugw("refreshing token")
-			t, err := client.RefreshToken(refresh, clientID, clientSecret, redirectURI)
-			if err != nil {
-				refresh.ExpiresIn = offset
-				// TODO: what do we do if we get an unrecoverable error when refreshing?
-				// write to an error channel and stop the app?
-				continue
-			}
-
-			if len(t.RefreshToken) != 0 {
-				logger.Debugw("got new refresh token", "refresh token", t.RefreshToken)
-				refresh.RefreshToken = t.RefreshToken
-			}
-			if t.ExpiresIn != 0 {
-				refresh.ExpiresIn = t.ExpiresIn
-			}
-			if len(t.AccessToken) != 0 {
-				tokenCh <- t.AccessToken
-			}
+			continue
 		}
 	}
+}
+
+func refresh(logger *zap.SugaredLogger, client *Client, r *Refresh, clientID, clientSecret, redirectURI string, tokenCh chan string, retryCh chan int) {
+	logger.Debugw("refreshing token")
+	t, err := client.RefreshToken(*r, clientID, clientSecret, redirectURI)
+	if err != nil {
+		retryCh <- 1
+	}
+
+	if len(t.RefreshToken) != 0 {
+		logger.Debugw("got new refresh token", "refresh token", t.RefreshToken)
+		r.RefreshToken = t.RefreshToken
+	}
+	if len(t.AccessToken) != 0 {
+		tokenCh <- t.AccessToken
+	}
+
 }
