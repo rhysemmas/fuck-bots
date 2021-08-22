@@ -1,0 +1,5 @@
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY bin/fuck-bots-linux-amd64 fuck-bots
+USER nonroot:nonroot
+ENTRYPOINT ["/fuck-bots"]
