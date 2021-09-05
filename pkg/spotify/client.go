@@ -48,8 +48,8 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 		params := "client_id=" + url.QueryEscape(clientID) +
 			"&response_type=code" +
 			"&redirect_uri=" + url.QueryEscape(redirectURI) +
-			"&scope=user-read-private&user-read-email&playlist-modify-private&playlist-modify-public" +
-			"&state=aslfsajhfbajhfbajhbAFHWIruf43872875uwfhhkjdsfbsahkjf"
+			"&scope=playlist-modify-public&playlist-modify-private" +
+			"&state=audHASDB2396gAJ"
 
 		path := fmt.Sprintf(c.Endpoint+"?%s", params)
 
