@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -225,6 +226,10 @@ func (c *Client) UpdatePlaylistDetails(token string, playlist Playlist) error {
 		}
 
 		defer resp.Body.Close()
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return 0, fmt.Errorf("error reading response body: %v", err)
+		}
 
 		if resp.StatusCode == 429 {
 			waitTime, err := strconv.Atoi(resp.Header["Retry-After"][0])
@@ -233,7 +238,7 @@ func (c *Client) UpdatePlaylistDetails(token string, playlist Playlist) error {
 			}
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
+			return 0, fmt.Errorf("got http error code: %v, body: %v", resp.StatusCode, b)
 		}
 
 		return 0, nil
