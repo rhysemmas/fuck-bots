@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fuck-bots
+spec:
+  selector:
+    matchLabels:
+      app: fuck-bots
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fuck-bots
+    spec:
+      containers:
+      - image: rhysemmas/fuck-bots:arm32
+        imagePullPolicy: Always
+        name: protector
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+        ports:
+        - name: callback-server
+          containerPort: 8080
+          protocol: TCP

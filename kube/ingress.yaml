@@ -1,0 +1,13 @@
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: fuck-bots
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /spotify/callback
+        backend:
+          serviceName: fuck-bots
+          servicePort: 80
