@@ -21,4 +21,4 @@ When the service initially starts, it will print a URL to STDOUT which you must 
 
 ## Considerations
 
-This service is currently experimental and is intended to be used by developers/cluster operators. With some future additions it would be possible to host this as  a proper Spotify app capable of handling multiple users and playlists, with a nice landing page for onboarding and kicking off the OAuth flow.
+This service is currently experimental and is intended to be used by developers/cluster operators. With some future additions it would be possible to host this as a proper Spotify app capable of handling multiple users and playlists, with a nice landing page for onboarding and kicking off the OAuth flow.
