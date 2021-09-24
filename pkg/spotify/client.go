@@ -46,6 +46,7 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 			},
 		}
 
+		// TODO: check state received in Spotify responses
 		now := time.Now().Format(time.RFC3339)
 		h := sha1.New()
 		h.Write([]byte(now))
