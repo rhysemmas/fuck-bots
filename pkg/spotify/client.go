@@ -2,6 +2,7 @@ package spotify
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,11 +46,17 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 			},
 		}
 
+		// TODO: check state received in Spotify responses
+		now := time.Now().Format(time.RFC3339)
+		h := sha1.New()
+		h.Write([]byte(now))
+		sha := h.Sum(nil)
+
 		params := "client_id=" + url.QueryEscape(clientID) +
 			"&response_type=code" +
 			"&redirect_uri=" + url.QueryEscape(redirectURI) +
 			"&scope=playlist-modify-public&playlist-modify-private" +
-			"&state=audHASDB2396gAJ"
+			"&state=" + string(sha)
 
 		path := fmt.Sprintf(c.Endpoint+"?%s", params)
 
