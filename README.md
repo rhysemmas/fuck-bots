@@ -1,6 +1,6 @@
-# fuck-bots
+# playlist-protector
 
-Fuck bots is a Golang application that continuously checks and reinstates a Spotify playlist's name when it's taken down by bots (or people) that falsely report it as offensive.
+Playlist protector is a Golang application that continuously checks and reinstates a Spotify playlist's name when it's taken down by bots (or people) that falsely report it as offensive.
 
 ## Usage
 

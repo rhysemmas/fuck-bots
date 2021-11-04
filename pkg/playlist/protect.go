@@ -11,8 +11,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/rhysemmas/fuck-bots/pkg/http"
-	"github.com/rhysemmas/fuck-bots/pkg/spotify"
+	"github.com/rhysemmas/playlist-protector/pkg/http"
+	"github.com/rhysemmas/playlist-protector/pkg/spotify"
 )
 
 type protector struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/rhysemmas/fuck-bots/pkg/spotify"
+	"github.com/rhysemmas/playlist-protector/pkg/spotify"
 )
 
 // Routes is a struct containing an http router and logger

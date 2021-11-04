@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fuck-bots
+  name: playlist-protector
 spec:
   selector:
     matchLabels:
-      app: fuck-bots
+      app: playlist-protector
   replicas: 1
   template:
     metadata:
       labels:
-        app: fuck-bots
+        app: playlist-protector
     spec:
       containers:
-      - image: rhysemmas/fuck-bots:arm32
+      - image: rhysemmas/playlist-protector:arm32
         imagePullPolicy: Always
         name: protector
         resources:

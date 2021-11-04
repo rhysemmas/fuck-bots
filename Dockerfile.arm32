@@ -1,5 +1,5 @@
 FROM gcr.io/distroless/base:nonroot-arm
 WORKDIR /
-COPY bin/fuck-bots-linux-arm32 fuck-bots
+COPY bin/playlist-protector-linux-arm32 playlist-protector
 USER nonroot:nonroot
-ENTRYPOINT ["/fuck-bots"]
+ENTRYPOINT ["/playlist-protector"]
