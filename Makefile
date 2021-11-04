@@ -1,4 +1,4 @@
-APP  = fuck-bots
+APP  = playlist-protector
 
 BIN = bin/$(APP)
 
@@ -27,7 +27,7 @@ $(BIN_LINUX_AMD64): $(SOURCES)
 build: $(BIN_DARWIN_AMD64) $(BIN_LINUX_ARM32) $(BIN_LINUX_AMD64) fmt vet
 
 private:
-	go env -w GOPRIVATE=github.com/rhysemmas/fuck-bots
+	go env -w GOPRIVATE=github.com/rhysemmas/playlist-protector
 
 vet:
 	go vet ./...

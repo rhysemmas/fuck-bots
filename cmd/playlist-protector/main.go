@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/rhysemmas/fuck-bots/pkg/playlist"
+	"github.com/rhysemmas/playlist-protector/pkg/playlist"
 )
 
 var (
