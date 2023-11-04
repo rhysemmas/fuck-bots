@@ -120,7 +120,7 @@ func (p *protector) protectPlaylist() {
 			}
 
 			// TODO: use ticker instead of sleep
-			time.Sleep(60 * time.Second)
+			time.Sleep(10 * time.Second)
 			p.logger.Debugw("making playlist request")
 
 			playlist, err := client.GetPlaylistDetails(token)

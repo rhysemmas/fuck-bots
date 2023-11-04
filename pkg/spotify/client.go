@@ -2,7 +2,6 @@ package spotify
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	backoffv4 "github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +41,7 @@ func NewClient(endpoint string, logger *zap.SugaredLogger) *Client {
 func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 	var location string
 
-	err := RetryAPICall(func() (waitTime int, err error) {
+	err := c.retryAPICall(func() (waitTime int, err error) {
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -51,16 +49,16 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 		}
 
 		// TODO: check state received in Spotify responses
-		now := time.Now().Format(time.RFC3339)
-		h := sha1.New()
-		h.Write([]byte(now))
-		sha := h.Sum(nil)
+		//now := time.Now().Format(time.RFC3339)
+		//h := sha1.New()
+		//h.Write([]byte(now))
+		//sha := h.Sum(nil)
 
 		params := "client_id=" + url.QueryEscape(clientID) +
 			"&response_type=code" +
 			"&redirect_uri=" + url.QueryEscape(redirectURI) +
 			"&scope=playlist-modify-public&playlist-modify-private" +
-			"&state=" + string(sha)
+			"&state=" + "testingtesting13456testing12345"
 
 		path := fmt.Sprintf(c.Endpoint+"?%s", params)
 
@@ -102,7 +100,7 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) (Token, error) {
 	var t Token
 
-	err := RetryAPICall(func() (waitTime int, err error) {
+	err := c.retryAPICall(func() (waitTime int, err error) {
 		resp, err := http.PostForm(c.Endpoint,
 			url.Values{
 				"client_id":     {clientID},
@@ -142,7 +140,7 @@ func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) 
 func (c *Client) RefreshToken(refresh Refresh, clientID, clientSecret, redirectURI string) (Token, error) {
 	var t Token
 
-	err := RetryAPICall(func() (waitTime int, err error) {
+	err := c.retryAPICall(func() (waitTime int, err error) {
 		resp, err := http.PostForm(c.Endpoint,
 			url.Values{
 				"client_id":     {clientID},
@@ -181,7 +179,7 @@ func (c *Client) RefreshToken(refresh Refresh, clientID, clientSecret, redirectU
 func (c *Client) GetPlaylistDetails(token string) (Playlist, error) {
 	var p Playlist
 
-	err := RetryAPICall(func() (waitTime int, err error) {
+	err := c.retryAPICall(func() (waitTime int, err error) {
 		client := &http.Client{}
 
 		req, err := http.NewRequest("GET", c.Endpoint, nil)
@@ -220,7 +218,7 @@ func (c *Client) GetPlaylistDetails(token string) (Playlist, error) {
 
 // UpdatePlaylistDetails updates the state of a playlist
 func (c *Client) UpdatePlaylistDetails(token string, playlist Playlist) error {
-	err := RetryAPICall(func() (waitTime int, err error) {
+	err := c.retryAPICall(func() (waitTime int, err error) {
 		client := &http.Client{}
 
 		requestBody, err := json.Marshal(playlist)
@@ -264,20 +262,17 @@ func (c *Client) UpdatePlaylistDetails(token string, playlist Playlist) error {
 }
 
 // RetryAPICall retries calls to spotify API
-func RetryAPICall(operation func() (int, error)) error {
-	var waitTime int
-	op := func() (err error) {
-		waitTime, err = operation()
+func (c *Client) retryAPICall(operation func() (int, error)) error {
+	for {
+		waitTime, err := operation()
 		if _, ok := err.(*RateLimitError); ok {
-			return err
-		}
-
-		if err != nil {
-			return backoffv4.Permanent(err)
+			c.logger.Warnw("got rate limit error, sleeping before trying again", "seconds", waitTime)
+			time.Sleep(time.Duration(waitTime+1) * time.Second)
+			continue
+		} else if err != nil {
+			return fmt.Errorf("error making API call: %v", err)
 		}
 
 		return nil
 	}
-
-	return backoffv4.Retry(op, backoffv4.NewConstantBackOff(time.Second*time.Duration(waitTime)))
 }
