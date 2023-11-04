@@ -12,7 +12,7 @@ import (
 // Authorise starts OAuth with Spotify by getting the user to authorise and grant a token with appropriate scopes
 func Authorise(logger *zap.SugaredLogger, clientID, redirectURI string) error {
 	logger.Debugw("making authorise request")
-	client := NewClient("https://accounts.spotify.com/authorize")
+	client := NewClient("https://accounts.spotify.com/authorize", logger)
 
 	url, err := client.Authorise(clientID, redirectURI)
 	if err != nil {
@@ -29,7 +29,7 @@ func GetToken(ctx context.Context, logger *zap.SugaredLogger, authCode, clientID
 	var r Refresh
 
 	logger.Debugw("getting token")
-	client := NewClient("https://accounts.spotify.com/api/token")
+	client := NewClient("https://accounts.spotify.com/api/token", logger)
 	t, err := client.GetToken(authCode, clientID, clientSecret, redirectURI)
 	if err != nil {
 		return fmt.Errorf("error getting token: %v", err)

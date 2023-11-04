@@ -106,7 +106,7 @@ func (p *protector) protectPlaylist() {
 	defer p.waitGroup.Done()
 
 	var token string
-	client := spotify.NewClient("https://api.spotify.com/v1/playlists/" + p.playlistID)
+	client := spotify.NewClient("https://api.spotify.com/v1/playlists/"+p.playlistID, p.logger)
 
 	for {
 		select {
@@ -120,7 +120,7 @@ func (p *protector) protectPlaylist() {
 			}
 
 			// TODO: use ticker instead of sleep
-			time.Sleep(5 * time.Second)
+			time.Sleep(60 * time.Second)
 			p.logger.Debugw("making playlist request")
 
 			playlist, err := client.GetPlaylistDetails(token)
