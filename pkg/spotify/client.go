@@ -12,6 +12,7 @@ import (
 	"time"
 
 	backoffv4 "github.com/cenkalti/backoff/v4"
+	"go.uber.org/zap"
 )
 
 // RateLimitError is an error used when spotify rate limits requests
@@ -27,12 +28,15 @@ func (r *RateLimitError) Error() string {
 // Client contains the endpoint that API calls will be made to
 type Client struct {
 	Endpoint string
+
+	logger *zap.SugaredLogger
 }
 
 // NewClient creates a new spotify client
-func NewClient(endpoint string) *Client {
+func NewClient(endpoint string, logger *zap.SugaredLogger) *Client {
 	return &Client{
 		Endpoint: endpoint,
+		logger:   logger,
 	}
 }
 
@@ -77,6 +81,7 @@ func (c *Client) Authorise(clientID, redirectURI string) (string, error) {
 			if err != nil {
 				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
+			c.logger.Warnw("hit rate limit while authorising", "waitTime", waitTime)
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
@@ -117,6 +122,7 @@ func (c *Client) GetToken(authCode, clientID, clientSecret, redirectURI string) 
 			if err != nil {
 				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
+			c.logger.Warnw("hit rate limit while getting token", "waitTime", waitTime)
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
@@ -155,6 +161,7 @@ func (c *Client) RefreshToken(refresh Refresh, clientID, clientSecret, redirectU
 			if err != nil {
 				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
+			c.logger.Warnw("hit rate limit while refreshing token", "waitTime", waitTime)
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
@@ -195,6 +202,7 @@ func (c *Client) GetPlaylistDetails(token string) (Playlist, error) {
 			if err != nil {
 				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
+			c.logger.Warnw("hit rate limit while getting playlist", "waitTime", waitTime)
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 			return 0, fmt.Errorf("got http error code: %v", resp.StatusCode)
@@ -243,6 +251,7 @@ func (c *Client) UpdatePlaylistDetails(token string, playlist Playlist) error {
 			if err != nil {
 				return 0, fmt.Errorf("error converting retry after to int: %v", err)
 			}
+			c.logger.Warnw("hit rate limit while updating playlist", "waitTime", waitTime)
 			return waitTime, &RateLimitError{E: "hit rate limit"}
 		} else if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 			return 0, fmt.Errorf("got http error code: %v, body: %v", resp.StatusCode, b)
