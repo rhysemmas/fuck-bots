@@ -42,8 +42,8 @@ run: fmt vet
 	go run $(CMD_SRC) --debug
 
 image: $(BIN_LINUX_AMD64) $(BIN_LINUX_ARM32)
-	docker buildx build --platform linux/amd64 -t $(IMAGE):amd64 . -f Dockerfile.amd64
-	docker buildx build --platform linux/arm/v7 -t $(IMAGE):arm32 . -f Dockerfile.arm32
+	docker buildx build --platform linux/amd64 -t $(IMAGE):amd64 . -f Dockerfile.amd64 --load
+	docker buildx build --platform linux/arm/v7 -t $(IMAGE):arm32 . -f Dockerfile.arm32 --load
 
 clean:
 	rm -rf bin/
